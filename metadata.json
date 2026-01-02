@@ -1,0 +1,7 @@
+{
+  "name": "Fazenda Mucambinho - Gestão de Máquinas",
+  "description": "Aplicativo para controle de horímetros, consumo de combustível e produtividade de tratores e máquinas agrícolas.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

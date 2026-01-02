@@ -44,3 +44,8 @@ export interface WorkLog {
   totalHours: number;
   createdAt: string;
 }
+
+export interface AppConfig {
+  googleSheetUrl: string;
+  autoSync: boolean;
+}

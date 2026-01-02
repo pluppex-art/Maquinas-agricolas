@@ -29,5 +29,6 @@ export const STORAGE_KEYS = {
   TRACTORS: 'mucambinho_tractors',
   LOGS: 'mucambinho_logs',
   SERVICES: 'mucambinho_services',
-  CURRENT_USER: 'mucambinho_current_user'
+  CURRENT_USER: 'mucambinho_current_user',
+  CONFIG: 'mucambinho_config'
 };

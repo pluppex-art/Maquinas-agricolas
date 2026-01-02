@@ -17,6 +17,9 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTractor, setEditingTractor] = useState<Tractor | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  
+  // Dashboard Filter State
+  const [dashboardTractorId, setDashboardTractorId] = useState<string>('all');
 
   const getToday = () => new Date().toISOString().split('T')[0];
 
@@ -29,17 +32,24 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
   });
 
   const stats = useMemo(() => {
-    const totalHours = logs.reduce((sum, log) => sum + log.totalHours, 0);
-    const totalFuel = logs.reduce((sum, log) => sum + log.fuelLiters, 0);
+    // Filter logs based on dashboard selection
+    const filteredLogs = dashboardTractorId === 'all' 
+      ? logs 
+      : logs.filter(log => log.tractorId === dashboardTractorId);
+
+    const totalHours = filteredLogs.reduce((sum, log) => sum + log.totalHours, 0);
+    const totalFuel = filteredLogs.reduce((sum, log) => sum + log.fuelLiters, 0);
     const avgConsumption = totalHours > 0 ? totalFuel / totalHours : 0;
     
+    // Machine comparison data (stays constant or adapts)
     const machineHours = tractors.map(t => {
       const hours = logs.filter(l => l.tractorId === t.id).reduce((sum, l) => sum + l.totalHours, 0);
       return { name: t.name, hours };
     });
 
+    // Service distribution based on filtered logs
     const serviceMap: Record<string, number> = {};
-    logs.forEach(log => {
+    filteredLogs.forEach(log => {
       serviceMap[log.serviceName] = (serviceMap[log.serviceName] || 0) + log.totalHours;
     });
     
@@ -47,8 +57,8 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
       name, value
     })).sort((a, b) => b.value - a.value).slice(0, 5);
 
-    return { totalHours, totalFuel, avgConsumption, machineHours, serviceDistribution };
-  }, [logs, tractors]);
+    return { totalHours, totalFuel, avgConsumption, machineHours, serviceDistribution, filteredLogsCount: filteredLogs.length };
+  }, [logs, tractors, dashboardTractorId]);
 
   const COLORS = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
 
@@ -117,6 +127,10 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
     document.body.removeChild(link);
   };
 
+  const selectedTractorName = dashboardTractorId === 'all' 
+    ? 'Todas as Máquinas' 
+    : tractors.find(t => t.id === dashboardTractorId)?.name || 'Máquina Selecionada';
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6">
       {/* Photo Preview Modal */}
@@ -155,27 +169,50 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
 
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
+          {/* Dashboard Header with Selector */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Resumo Operacional</h2>
+              <p className="text-sm text-gray-500">Visualizando dados de: <span className="font-semibold text-emerald-700">{selectedTractorName}</span></p>
+            </div>
+            
+            <div className="w-full sm:w-64">
+              <label htmlFor="tractor-filter" className="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Selecionar Máquina</label>
+              <select
+                id="tractor-filter"
+                value={dashboardTractorId}
+                onChange={(e) => setDashboardTractorId(e.target.value)}
+                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer"
+              >
+                <option value="all">Todas as Máquinas</option>
+                {tractors.map(t => (
+                  <option key={t.id} value={t.id}>{t.name} ({t.model})</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-emerald-500">
-              <p className="text-sm font-semibold text-gray-500 uppercase">Horas Totais</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase">Horas Trabalhadas</p>
               <h3 className="text-3xl font-bold text-gray-800">{stats.totalHours.toFixed(1)} h</h3>
-              <p className="text-xs text-gray-400 mt-2">Acumulado do período</p>
+              <p className="text-xs text-gray-400 mt-2">Baseado em {stats.filteredLogsCount} registros</p>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
               <p className="text-sm font-semibold text-gray-500 uppercase">Combustível Total</p>
               <h3 className="text-3xl font-bold text-gray-800">{stats.totalFuel.toFixed(0)} L</h3>
-              <p className="text-xs text-gray-400 mt-2">Total abastecido</p>
+              <p className="text-xs text-gray-400 mt-2">Volume total abastecido</p>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-amber-500">
               <p className="text-sm font-semibold text-gray-500 uppercase">Consumo Médio</p>
               <h3 className="text-3xl font-bold text-gray-800">{stats.avgConsumption.toFixed(2)} L/h</h3>
-              <p className="text-xs text-gray-400 mt-2">Eficiência da frota</p>
+              <p className="text-xs text-gray-400 mt-2">Média de eficiência</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h4 className="text-lg font-bold text-gray-800 mb-6">Uso por Máquina (Horas)</h4>
+              <h4 className="text-lg font-bold text-gray-800 mb-6">Comparativo: Uso por Máquina (Horas)</h4>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.machineHours}>
@@ -183,14 +220,19 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="hours" fill="#059669" radius={[4, 4, 0, 0]} />
+                    <Bar 
+                      dataKey="hours" 
+                      fill="#059669" 
+                      radius={[4, 4, 0, 0]} 
+                      activeBar={{ fill: '#047857' }}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h4 className="text-lg font-bold text-gray-800 mb-6">Top 5 Serviços</h4>
+              <h4 className="text-lg font-bold text-gray-800 mb-6">Distribuição de Serviços</h4>
               <div className="h-64 flex justify-center">
                 {stats.serviceDistribution.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -203,6 +245,7 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
                         outerRadius={80}
                         paddingAngle={5}
                         dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
                         {stats.serviceDistribution.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -212,7 +255,7 @@ const AdminView: React.FC<AdminViewProps> = ({ logs, tractors, services, onAddTr
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center text-gray-400">Sem dados suficientes</div>
+                  <div className="flex items-center justify-center text-gray-400">Sem registros para esta seleção</div>
                 )}
               </div>
             </div>

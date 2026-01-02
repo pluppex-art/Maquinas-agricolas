@@ -49,6 +49,11 @@ const OperatorView: React.FC<OperatorViewProps> = ({ operator, tractors, service
     const sHorimeter = parseFloat(startHorimeter);
     const eHorimeter = parseFloat(endHorimeter);
     
+    if (isNaN(sHorimeter) || isNaN(eHorimeter)) {
+      alert("⚠️ Por favor, insira valores válidos para o horímetro.");
+      return;
+    }
+
     if (eHorimeter < sHorimeter) {
       alert("⚠️ O horímetro final não pode ser menor que o inicial.");
       return;
@@ -109,20 +114,20 @@ const OperatorView: React.FC<OperatorViewProps> = ({ operator, tractors, service
   if (success) {
     return (
       <div className="p-6 text-center animate-in fade-in duration-500">
-        <div className="bg-emerald-500 text-white p-10 rounded-[40px] shadow-2xl mb-8">
+        <div className="bg-emerald-600 text-white p-10 rounded-[40px] shadow-2xl mb-8">
           <div className="bg-white/20 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-3xl font-black mb-2">TUDO PRONTO!</h2>
-          <p className="font-bold opacity-80 uppercase tracking-widest text-xs">Dados salvos com sucesso na planilha.</p>
+          <h2 className="text-3xl font-black mb-2 uppercase">Registro Salvo!</h2>
+          <p className="font-bold uppercase tracking-widest text-xs">Os dados foram enviados para a planilha.</p>
         </div>
         <button 
           onClick={() => setSuccess(false)}
-          className="bg-emerald-100 text-emerald-800 font-black py-4 px-8 rounded-2xl uppercase text-xs"
+          className="bg-emerald-800 text-white font-black py-5 px-10 rounded-2xl uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all"
         >
-          Fazer novo registro
+          Novo Registro
         </button>
       </div>
     );
@@ -130,42 +135,49 @@ const OperatorView: React.FC<OperatorViewProps> = ({ operator, tractors, service
 
   return (
     <div className="p-4 max-w-lg mx-auto pb-20">
-      <div className="bg-white rounded-[32px] shadow-sm p-6 mb-6 border border-gray-100">
+      <div className="bg-white rounded-[32px] shadow-sm p-6 mb-6 border-4 border-gray-100">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter">Diário de Campo</h2>
-          <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full uppercase">Novo</span>
+          <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tighter">Diário de Campo</h2>
+          <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black px-3 py-1 rounded-full uppercase border border-emerald-200">Operação</span>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Seleção de Máquina */}
           <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Qual máquina você usou?</label>
-            <select
-              value={selectedTractorId}
-              onChange={(e) => {
-                setSelectedTractorId(e.target.value);
-                const t = tractors.find(x => x.id === e.target.value);
-                if (t) setStartHorimeter(t.currentHorimeter.toString());
-              }}
-              required
-              className="w-full p-5 border-2 border-gray-100 rounded-2xl bg-gray-50 text-gray-900 focus:border-emerald-500 outline-none font-bold text-lg appearance-none"
-            >
-              <option value="">Escolha o Trator...</option>
-              {tractors.map(t => (
-                <option key={t.id} value={t.id}>{t.name} ({t.model})</option>
-              ))}
-            </select>
+            <label className="block text-xs font-black text-gray-950 uppercase tracking-wider mb-3">Selecione a Máquina:</label>
+            <div className="relative">
+              <select
+                value={selectedTractorId}
+                onChange={(e) => {
+                  setSelectedTractorId(e.target.value);
+                  const t = tractors.find(x => x.id === e.target.value);
+                  if (t) setStartHorimeter(t.currentHorimeter.toString());
+                }}
+                required
+                className="w-full p-5 border-4 border-gray-200 rounded-2xl bg-gray-50 text-gray-950 focus:border-emerald-600 outline-none font-black text-lg appearance-none"
+              >
+                <option value="" className="text-gray-900">Escolha o Trator...</option>
+                {tractors.map(t => (
+                  <option key={t.id} value={t.id} className="text-gray-950">{t.name} ({t.model})</option>
+                ))}
+              </select>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-950">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          {/* Horímetros e Fotos - Visual Cartão */}
+          {/* Horímetros e Fotos */}
           <div className="space-y-4">
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Horímetros e Fotos</label>
+            <label className="block text-xs font-black text-gray-950 uppercase tracking-wider">Horímetros (Leitura da Máquina)</label>
             
             {/* Bloco Inicial */}
-            <div className="bg-emerald-50/50 p-5 rounded-3xl border-2 border-emerald-100">
-              <p className="text-[10px] font-black text-emerald-700 uppercase mb-4 tracking-wider flex items-center gap-2">
-                <span className="w-5 h-5 bg-emerald-700 text-white rounded-full flex items-center justify-center">1</span> 
-                Início do Trabalho
+            <div className="bg-emerald-50 p-5 rounded-3xl border-4 border-emerald-200 shadow-sm">
+              <p className="text-[11px] font-black text-emerald-950 uppercase mb-4 tracking-wider flex items-center gap-2">
+                <span className="w-6 h-6 bg-emerald-700 text-white rounded-full flex items-center justify-center text-[10px]">1</span> 
+                INÍCIO DO DIA
               </p>
               <div className="flex gap-3">
                 <div className="flex-1">
@@ -174,26 +186,31 @@ const OperatorView: React.FC<OperatorViewProps> = ({ operator, tractors, service
                     step="0.1"
                     value={startHorimeter}
                     onChange={(e) => setStartHorimeter(e.target.value)}
-                    placeholder="Horímetro"
-                    className="w-full p-4 border-2 border-white rounded-xl bg-white text-gray-900 font-black text-center focus:border-emerald-500 outline-none"
+                    placeholder="Horas iniciais"
+                    className="w-full p-5 border-4 border-emerald-100 rounded-xl bg-white text-gray-950 font-black text-center focus:border-emerald-600 outline-none text-xl placeholder-gray-500"
                     required
                   />
                 </div>
-                <div className="w-20">
+                <div className="w-24">
                   <input type="file" accept="image/*" capture="environment" className="hidden" ref={fileInputStart} onChange={(e) => handleFileChange(e, setStartPhoto)} />
-                  <button type="button" onClick={() => fileInputStart.current?.click()} className={`w-full h-full flex items-center justify-center rounded-xl transition-all ${startPhoto ? 'bg-emerald-500 text-white' : 'bg-white text-emerald-600 border-2 border-white shadow-sm'}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+                  <button type="button" onClick={() => fileInputStart.current?.click()} className={`w-full h-full flex items-center justify-center rounded-xl transition-all border-4 ${startPhoto ? 'bg-emerald-600 border-emerald-600 text-white shadow-md' : 'bg-white border-emerald-300 text-emerald-600 shadow-sm'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
                   </button>
                 </div>
               </div>
-              {startPhoto && <img src={startPhoto} className="mt-3 w-full h-20 object-cover rounded-xl border-2 border-white shadow-sm" alt="Foto Inicial" />}
+              {startPhoto && (
+                <div className="mt-4 relative rounded-xl overflow-hidden border-2 border-emerald-400">
+                  <img src={startPhoto} className="w-full h-24 object-cover" alt="Foto Inicial" />
+                  <div className="absolute bottom-1 right-1 bg-emerald-700 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">Foto OK</div>
+                </div>
+              )}
             </div>
 
             {/* Bloco Final */}
-            <div className="bg-amber-50/50 p-5 rounded-3xl border-2 border-amber-100">
-              <p className="text-[10px] font-black text-amber-700 uppercase mb-4 tracking-wider flex items-center gap-2">
-                <span className="w-5 h-5 bg-amber-700 text-white rounded-full flex items-center justify-center">2</span> 
-                Fim do Trabalho
+            <div className="bg-amber-50 p-5 rounded-3xl border-4 border-amber-200 shadow-sm">
+              <p className="text-[11px] font-black text-amber-950 uppercase mb-4 tracking-wider flex items-center gap-2">
+                <span className="w-6 h-6 bg-amber-700 text-white rounded-full flex items-center justify-center text-[10px]">2</span> 
+                FIM DO DIA
               </p>
               <div className="flex gap-3">
                 <div className="flex-1">
@@ -202,34 +219,53 @@ const OperatorView: React.FC<OperatorViewProps> = ({ operator, tractors, service
                     step="0.1"
                     value={endHorimeter}
                     onChange={(e) => setEndHorimeter(e.target.value)}
-                    placeholder="Horímetro"
-                    className="w-full p-4 border-2 border-white rounded-xl bg-white text-gray-900 font-black text-center focus:border-amber-500 outline-none"
+                    placeholder="Horas finais"
+                    className="w-full p-5 border-4 border-amber-100 rounded-xl bg-white text-gray-950 font-black text-center focus:border-amber-600 outline-none text-xl placeholder-gray-500"
                     required
                   />
                 </div>
-                <div className="w-20">
+                <div className="w-24">
                   <input type="file" accept="image/*" capture="environment" className="hidden" ref={fileInputEnd} onChange={(e) => handleFileChange(e, setEndPhoto)} />
-                  <button type="button" onClick={() => fileInputEnd.current?.click()} className={`w-full h-full flex items-center justify-center rounded-xl transition-all ${endPhoto ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 border-2 border-white shadow-sm'}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+                  <button type="button" onClick={() => fileInputEnd.current?.click()} className={`w-full h-full flex items-center justify-center rounded-xl transition-all border-4 ${endPhoto ? 'bg-amber-600 border-amber-600 text-white shadow-md' : 'bg-white border-amber-300 text-amber-600 shadow-sm'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
                   </button>
                 </div>
               </div>
-              {endPhoto && <img src={endPhoto} className="mt-3 w-full h-20 object-cover rounded-xl border-2 border-white shadow-sm" alt="Foto Final" />}
+              {endPhoto && (
+                <div className="mt-4 relative rounded-xl overflow-hidden border-2 border-amber-400">
+                  <img src={endPhoto} className="w-full h-24 object-cover" alt="Foto Final" />
+                  <div className="absolute bottom-1 right-1 bg-amber-700 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">Foto OK</div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Serviço e Combustível */}
           <div className="grid grid-cols-1 gap-6">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">O que você fez hoje?</label>
-              <input type="text" value={serviceName} onChange={(e) => setServiceName(e.target.value)} placeholder="Ex: Aragem de Terra" required className="w-full p-4 border-2 border-gray-100 rounded-2xl bg-gray-50 text-gray-900 font-bold focus:border-emerald-500 outline-none" />
+              <label className="block text-xs font-black text-gray-950 uppercase tracking-wider mb-3">Qual serviço foi feito?</label>
+              <input 
+                type="text" 
+                value={serviceName} 
+                onChange={(e) => setServiceName(e.target.value)} 
+                placeholder="Ex: Grade aradora" 
+                required 
+                className="w-full p-5 border-4 border-gray-200 rounded-2xl bg-gray-50 text-gray-950 font-black focus:border-emerald-600 outline-none text-lg placeholder-gray-500" 
+              />
             </div>
             
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Quantos Litros Abasteceu?</label>
+              <label className="block text-xs font-black text-gray-950 uppercase tracking-wider mb-3">Diesel Abastecido (Litros):</label>
               <div className="relative">
-                <input type="number" value={fuel} onChange={(e) => setFuel(e.target.value)} placeholder="0" required className="w-full p-4 border-2 border-gray-100 rounded-2xl bg-gray-50 text-gray-900 font-black text-2xl focus:border-emerald-500 outline-none" />
-                <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-gray-300">LITROS</span>
+                <input 
+                  type="number" 
+                  value={fuel} 
+                  onChange={(e) => setFuel(e.target.value)} 
+                  placeholder="0" 
+                  required 
+                  className="w-full p-5 border-4 border-gray-200 rounded-2xl bg-gray-50 text-gray-950 font-black text-3xl focus:border-emerald-600 outline-none placeholder-gray-500" 
+                />
+                <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-gray-500 text-lg">L</span>
               </div>
             </div>
           </div>
@@ -237,14 +273,9 @@ const OperatorView: React.FC<OperatorViewProps> = ({ operator, tractors, service
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full py-6 rounded-3xl shadow-xl shadow-emerald-200 text-white font-black text-xl tracking-widest uppercase transition-all active:scale-95 ${isSubmitting ? 'bg-gray-300' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+            className={`w-full py-7 rounded-[25px] shadow-2xl shadow-emerald-200 text-white font-black text-2xl tracking-widest uppercase transition-all active:scale-95 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800'}`}
           >
-            {isSubmitting ? (
-              <span className="flex items-center justify-center gap-3">
-                <svg className="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                ENVIANDO...
-              </span>
-            ) : 'FINALIZAR JORNADA'}
+            {isSubmitting ? 'SALVANDO...' : 'SALVAR TRABALHO'}
           </button>
         </form>
       </div>

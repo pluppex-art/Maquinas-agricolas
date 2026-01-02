@@ -1,16 +1,21 @@
 
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+  throw new Error("Não foi possível encontrar o elemento root para montar a aplicação.");
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+try {
+  const root = createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+} catch (error) {
+  console.error("Erro ao renderizar a aplicação:", error);
+  rootElement.innerHTML = `<div style="padding: 20px; color: red;">Erro crítico ao carregar o sistema. Verifique o console.</div>`;
+}

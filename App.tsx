@@ -30,12 +30,14 @@ const App: React.FC = () => {
     if (!storedTractors) localStorage.setItem(STORAGE_KEYS.TRACTORS, JSON.stringify(INITIAL_TRACTORS));
     if (!storedServices) localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(INITIAL_SERVICES));
 
-    setUsers(storedUsers ? JSON.parse(storedUsers) : INITIAL_USERS);
-    setTractors(storedTractors ? JSON.parse(storedTractors) : INITIAL_TRACTORS);
+    const finalUsers = storedUsers ? JSON.parse(storedUsers) : INITIAL_USERS;
+    const finalTractors = storedTractors ? JSON.parse(storedTractors) : INITIAL_TRACTORS;
+
+    setUsers(finalUsers);
+    setTractors(finalTractors);
     setServices(storedServices ? JSON.parse(storedServices) : INITIAL_SERVICES);
     setLogs(storedLogs ? JSON.parse(storedLogs) : []);
     
-    // Se já houver config no storage, usa ela. Caso contrário, mantém o padrão com a URL fornecida.
     if (storedConfig) {
       setConfig(JSON.parse(storedConfig));
     } else {
@@ -43,7 +45,6 @@ const App: React.FC = () => {
     }
 
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
-    
     setInitialized(true);
   }, []);
 
@@ -56,18 +57,16 @@ const App: React.FC = () => {
     if (!config.googleSheetUrl) return { success: false, message: 'URL da planilha não configurada.' };
 
     try {
-      // Usamos no-cors pois o Apps Script redireciona e o navegador bloqueia a leitura da resposta, 
-      // mas o dado chega com sucesso no Google.
       await fetch(config.googleSheetUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(dataToSync)
       });
-      return { success: true, message: 'Dados enviados com sucesso para o Google!' };
+      return { success: true, message: 'Dados enviados para o Google Sheets!' };
     } catch (error) {
       console.error('Erro na sincronização:', error);
-      return { success: false, message: 'Erro ao conectar com o Google Sheets.' };
+      return { success: false, message: 'Erro de conexão.' };
     }
   };
 
@@ -101,30 +100,35 @@ const App: React.FC = () => {
     const updated = [...tractors, tractor];
     setTractors(updated);
     localStorage.setItem(STORAGE_KEYS.TRACTORS, JSON.stringify(updated));
+    if (config.autoSync) syncToGoogleSheets({ tractors: updated });
   };
 
   const updateTractor = (updatedTractor: Tractor) => {
     const updated = tractors.map(t => t.id === updatedTractor.id ? updatedTractor : t);
     setTractors(updated);
     localStorage.setItem(STORAGE_KEYS.TRACTORS, JSON.stringify(updated));
+    if (config.autoSync) syncToGoogleSheets({ tractors: updated });
   };
 
   const deleteTractor = (id: string) => {
     const updated = tractors.filter(t => t.id !== id);
     setTractors(updated);
     localStorage.setItem(STORAGE_KEYS.TRACTORS, JSON.stringify(updated));
+    if (config.autoSync) syncToGoogleSheets({ tractors: updated });
   };
 
   const addUser = (user: User) => {
     const updated = [...users, user];
     setUsers(updated);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated));
+    if (config.autoSync) syncToGoogleSheets({ users: updated });
   };
 
   const updateUser = (updatedUser: User) => {
     const updated = users.map(u => u.id === updatedUser.id ? updatedUser : u);
     setUsers(updated);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated));
+    if (config.autoSync) syncToGoogleSheets({ users: updated });
     if (currentUser && currentUser.id === updatedUser.id) {
       setCurrentUser(updatedUser);
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedUser));
@@ -135,12 +139,13 @@ const App: React.FC = () => {
     const updated = users.filter(u => u.id !== id);
     setUsers(updated);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated));
+    if (config.autoSync) syncToGoogleSheets({ users: updated });
   };
 
-  if (!initialized) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+  if (!initialized) return <div className="flex items-center justify-center h-screen bg-emerald-900 text-white font-bold">Iniciando Sistema...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       {!currentUser ? (
         <Login onLogin={handleLogin} />
       ) : (
@@ -148,13 +153,13 @@ const App: React.FC = () => {
           <header className="bg-emerald-800 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-50">
             <div>
               <h1 className="text-lg font-bold leading-tight">Fazenda Mucambinho</h1>
-              <p className="text-xs opacity-80">{currentUser.name} • {currentUser.role === UserRole.ADMIN ? 'Administrador' : 'Operador'}</p>
+              <p className="text-[10px] uppercase tracking-wider opacity-90">{currentUser.name} • {currentUser.role === UserRole.ADMIN ? 'Admin' : 'Operador'}</p>
             </div>
             <button 
               onClick={handleLogout}
-              className="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-md text-sm transition-colors"
+              className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-white/20"
             >
-              Sair
+              SAIR
             </button>
           </header>
 
